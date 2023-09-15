@@ -1,1 +1,1 @@
-github-feed-manager
+# mbw-feed-manager // logic repo
