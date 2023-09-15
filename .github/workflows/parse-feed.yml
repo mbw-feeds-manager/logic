@@ -1,0 +1,17 @@
+name: Parse feed
+
+on:
+  workflow_dispatch:
+    inputs:
+      feed:
+        description: 'Feed URL'
+        required: true
+
+jobs:
+
+  parse-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse feed
+        run: echo "${{ github.event.inputs.feed }}"
+
