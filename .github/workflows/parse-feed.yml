@@ -11,7 +11,15 @@ jobs:
 
   parse-feed:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.11-slim
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Parse feed
-        run: echo "${{ github.event.inputs.feed }}"
+        run: |
+          python -m pip install -U pip
+          python -m pip intall -r requirements.txt
+          python parse-feed.py -f ${{ github.event.inputs.feed }}
 
