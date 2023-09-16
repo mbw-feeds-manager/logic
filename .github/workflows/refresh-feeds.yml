@@ -26,7 +26,7 @@ jobs:
         run: |
           set -eo pipefail
           git clone https://x-access-token:${{ secrets.DATA_REPO_TOKEN }}@github.com/mbw-feeds-manager/data.git ${{ env.DATA_SOURCE_DIR }}
-          cd ${{ env.DATA_STORE_DIR }}
+          cd ${{ env.DATA_SOURCE_DIR }}
           git config user.name "Matt Wiley"
           git config user.email "mattwiley+github@fastmail.com"
           cd data_store
