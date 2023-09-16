@@ -92,6 +92,6 @@ jobs:
           date > blap.txt
           git status --short
           git add .
-          git commit -m "Update from: ${{ github.workflow }} #${{ github.run_number }}}}"
+          git commit -m "Update from: ${{ github.workflow }} #${{ github.run_number }}"
           git push -u origin main
           printf "\n\n"
