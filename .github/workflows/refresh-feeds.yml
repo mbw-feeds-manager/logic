@@ -1,0 +1,97 @@
+name: Refresh Feeds
+
+on: workflow_dispatch
+
+env:
+  DATA_BASE_DIR: "${{ github.workspace }}/data"
+  DATA_SOURCE_SUBDIR: "data_source"
+  DATA_STAGING_SUBDIR: "data_staging"
+
+jobs:
+  refresh-feeds:
+    runs-on: ubuntu-latest
+    container: mattwiley/ubuntu:20.04
+    steps:
+      - name: Setup Environment Variables
+        run: |
+          echo "DATA_STAGING_DIR=${{ env.DATA_BASE_DIR }}/${{ env.DATA_STAGING_SUBDIR }}" >> $GITHUB_ENV
+          echo "DATA_SOURCE_DIR=${{ env.DATA_BASE_DIR }}/${{ env.DATA_SOURCE_SUBDIR }}" >> $GITHUB_ENV
+          echo "DATA_STORE_DIR=${{ env.DATA_BASE_DIR }}/${{ env.DATA_SOURCE_SUBDIR }}/data_store" >> $GITHUB_ENV
+
+      - name: Checkout Logic
+        uses: actions/checkout@v3
+
+      - name: Checkout Data
+        shell: bash
+        run: |
+          set -eo pipefail
+          git clone https://x-access-token:${{ secrets.DATA_REPO_TOKEN }}@github.com/mbw-feeds-manager/data.git ${{ env.DATA_SOURCE_DIR }}
+          cd ${DATA_SOURCE_DIR}
+          git config user.name "Matt Wiley"
+          git config user.email "mattwiley+github@fastmail.com"
+          cd data_store
+          ls -la
+          pwd
+
+      - name: Setup Python
+        shell: bash
+        run: |
+          set -eo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends python3 python3-pip
+          ln -sf /usr/bin/python3 /usr/bin/python
+          ln -sf /usr/bin/pip3 /usr/bin/pip
+
+      - name: Install Python Dependencies
+        shell: bash
+        run: |
+          set -eo pipefail
+          python -m pip install -r requirements.txt
+
+      - name: Setup Config File for Refresh
+        shell: python
+        run: |
+          import json
+          with open("config.json", "w") as f:
+            f.write(
+              json.dumps(
+                dict(
+                  is_local_data=True,
+                  data_base_dir="${{ env.DATA_BASE_DIR }}",
+                  data_store_dir="${{ env.DATA_SOURCE_SUBDIR }}/data_store",
+                  data_staging_dir="${{ env.DATA_STAGING_SUBDIR }}",
+                ), 
+                indent=2
+              )
+            )
+
+      - name: Refresh Feeds
+        shell: bash
+        run: |
+          set -eo pipefail
+          python parse-feeds.py
+          cd ${{ env.DATA_STAGING_DIR }}
+          ls -la
+          pwd
+
+      - name: Post Refresh
+        shell: bash
+        run: |
+          set -eo pipefail
+          ./post-staging.sh ${{ env.DATA_STAGING_DIR }} ${{ env.DATA_STORE_DIR }}
+          cd ${{ env.DATA_STORE_DIR }}
+          ls -la
+          pwd
+
+      - name: Blap
+        shell: bash
+        run: |
+          set -eo pipefail
+          printf "\n\n"
+          cd ${{ env.DATA_SOURCE_DIR }}
+          date > blap.txt
+          git status --short
+          git add .
+          git commit -m "Update from: ${{ github.workflow }} #${{ github.run_number }}}}"
+          git push -u origin main
+          printf "\n\n"

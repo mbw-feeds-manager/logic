@@ -1,0 +1,8 @@
+{
+  "is_local_data": true,
+  "data_base_dir": "/Users/matt/Codespace/mbw-feeds-manager/logic/feature/load-sources/.local/data",
+  "data_store_dir": "data_source/data_store",
+  "data_staging_dir": "data_staging"
+}
+
+
