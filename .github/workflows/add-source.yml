@@ -11,7 +11,7 @@ on:
         required: true
       description:
         description: 'Description of the source to add'
-        required: true
+        required: false
 
 jobs:
 
@@ -69,5 +69,5 @@ jobs:
         shell: bash
         env:
           SOURCE_DIR: ${{ env.DATA_SOURCE_DIR }}
-          UPDATE_FROM: ${{ github.actor == 'nektos/act' && 'nektos/act' || format('{0} {1}',github.workflow,github.run_number) }}
+          UPDATED_FROM: ${{ github.actor == 'nektos/act' && 'nektos/act' || format('{0} {1}',github.workflow,github.run_number) }}
         run: ./.github/workflows/tasks/push_changes.sh
