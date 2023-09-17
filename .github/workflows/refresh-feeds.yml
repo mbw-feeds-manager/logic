@@ -65,16 +65,7 @@ jobs:
 
       - name: Blap
         shell: bash
-        run: |
-          set -eo pipefail
-          printf "\n\n"
-          cd ${{ env.DATA_SOURCE_DIR }}
-
-          git config --list
-
-          date > blap.txt
-          git status --short
-          git add .
-          git commit -m "Update from: localdev"
-          git push -u origin main
-          printf "\n\n"
+        env:
+          SOURCE_DIR: ${{ env.DATA_SOURCE_DIR }}
+          UPDATED_FROM: ${{ github.actor == 'nektos/act' && 'nektos/act' || format('{0} {1}',github.workflow,github.run_number) }}
+        run: ./.github/workflows/tasks/push_changes.sh
