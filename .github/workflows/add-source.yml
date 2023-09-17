@@ -1,9 +1,21 @@
-name: Refresh Feeds
+name: Add Source
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL of the source to add'
+        required: true
+      name:
+        description: 'Name of the source to add'
+        required: true
+      description:
+        description: 'Description of the source to add'
+        required: true
 
 jobs:
-  refresh-feeds:
+
+  add-source:
     runs-on: ubuntu-latest
     container: mattwiley/ubuntu:20.04
     steps:
@@ -29,7 +41,7 @@ jobs:
       - name: Setup Python
         shell: bash
         run: ./.github/workflows/tasks/setup_python.sh
-          
+
       - name: Install Python Dependencies
         shell: bash
         run: |
@@ -45,36 +57,17 @@ jobs:
           STAGING_DIR: ${{ env.DATA_STAGING_SUBDIR }}
         run: python ./.github/workflows/tasks/setup_config.py
 
-      - name: Refresh Feeds
+      - name: Add Source
         shell: bash
         run: |
-          set -eo pipefail
-          python parse-feeds.py
-          cd ${{ env.DATA_STAGING_DIR }}
-          ls -la
-          pwd
-
-      - name: Post Refresh
-        shell: bash
-        run: |
-          set -eo pipefail
-          ./post-staging.sh ${{ env.DATA_STAGING_DIR }} ${{ env.DATA_STORE_DIR }}
-          cd ${{ env.DATA_STORE_DIR }}
-          ls -la
-          pwd
+          python add-source.py \
+            --url "${{ github.event.inputs.url }}" \
+            --name "${{ github.event.inputs.name }}" \
+            --description "${{ github.event.inputs.description }}"
 
       - name: Blap
         shell: bash
-        run: |
-          set -eo pipefail
-          printf "\n\n"
-          cd ${{ env.DATA_SOURCE_DIR }}
-
-          git config --list
-
-          date > blap.txt
-          git status --short
-          git add .
-          git commit -m "Update from: localdev"
-          git push -u origin main
-          printf "\n\n"
+        env:
+          SOURCE_DIR: ${{ env.DATA_SOURCE_DIR }}
+          UPDATE_FROM: ${{ github.actor == 'nektos/act' && 'nektos/act' || format('{0} {1}',github.workflow,github.run_number) }}
+        run: ./.github/workflows/tasks/push_changes.sh
